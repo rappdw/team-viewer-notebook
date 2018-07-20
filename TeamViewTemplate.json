@@ -1,0 +1,466 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Team View - {{extract.name}}\n",
+    "\n",
+    "This Team View includes the following respositories:\n",
+    {% for repo in extract.repos %}"* {{repo.name}}\n"{{",\n" if not loop.last}}{% endfor %}
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import holoviews as hv\n",
+    "hv.extension('bokeh', logo=False)\n",
+    "\n",
+    "project_stats_dir = 'data/{{extract.name}}'\n",
+    "\n",
+    "df_auth_tot = pd.read_csv(f'{project_stats_dir}/author_totals.csv')\n",
+    "df_loc = pd.read_csv(f'{project_stats_dir}/loc.csv')\n",
+    "df_loc_delta = pd.read_csv(f'{project_stats_dir}/loc_delta.csv')\n",
+    "df_revs = pd.read_csv(f'{project_stats_dir}/revs.csv')\n",
+    "df_repo = pd.read_csv(f'{project_stats_dir}/repo.csv')\n",
+    "df_prs = pd.read_csv(f'{project_stats_dir}/prs.csv')\n",
+    "\n",
+    "resource_types = ['Plain Text', 'Notebook', 'Markdown', 'HTML', 'JSON', 'SVG', 'YAML']\n",
+    "\n",
+    "from bokeh.models import BasicTickFormatter\n",
+    "def apply_formatter_y_non_scientific(plot, element):\n",
+    "    plot.handles['yaxis'].formatter = BasicTickFormatter(use_scientific=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from io import StringIO\n",
+    "\n",
+    "# There are commits that improperly bias the net contribution for an author (either up or down). \n",
+    "# The following adjustments will be made to compensate for that bias. To utilize adjustment,  \n",
+    "# look at the \"Commits to Consider for Exclusion\" section of this notebook. Based on the results\n",
+    "# in that secion, entries can be added here. Usually, you will want to copy the rows from loc_delta.csv,\n",
+    "# reverse the sign on the count columns, and change the comment to explain why the adjustment\n",
+    "# is being made.\n",
+    "\n",
+    "adjustments = StringIO('''\n",
+    "Repo,CommitHash,TimeStamp,Author,Language,Files,Lines,Code,Comments,Blanks,Revision Comment\n",
+    {% for adjustment in extract.adjustments %}"{{adjustment}}\n",{% endfor %}
+    "''')\n",
+    "\n",
+    "df_loc_delta = pd.concat([\n",
+    "    df_loc_delta,\n",
+    "    pd.read_csv(adjustments)\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Size of Repositories in Project\n",
+    "### Source Code\n",
+    "Source code ignores \"Plain Text\", \"Markdown\" and \"Notebook\" files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts NdOverlay [legend_position='top_left']\n",
+    "%%opts Bars [tools=['hover'] xrotation=90 finalize_hooks=[apply_formatter_y_non_scientific]]\n",
+    "\n",
+    "df = df_repo[~df_repo.Language.isin(['Total'] + resource_types)]\n",
+    "\n",
+    "ds = hv.Dataset(df, kdims=['Repo', 'Language'], vdims=['Lines', 'Files'])\n",
+    "ds.to(hv.Bars, kdims='Language', vdims='Lines') + ds.to(hv.Bars, kdims='Language', vdims='Files')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Resources\n",
+    "Resources include: \"Plain Text\", \"Markdown\" and \"Notebook\" files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts NdOverlay [legend_position='top_left']\n",
+    "%%opts Bars [tools=['hover'] xrotation=90 finalize_hooks=[apply_formatter_y_non_scientific]]\n",
+    "\n",
+    "df = df_repo[df_repo.Language.isin(resource_types)]\n",
+    "\n",
+    "ds = hv.Dataset(df, kdims=['Repo', 'Language'], vdims=['Lines', 'Files'])\n",
+    "ds.to(hv.Bars, kdims='Language', vdims='Lines') + ds.to(hv.Bars, kdims='Language', vdims='Files')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Net Contribution to Change by Author\n",
+    "### Source Code"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%output size=200\n",
+    "%%opts Bars [tools=['hover'] xrotation=90 legend_position='top' width=750]\n",
+    "df = df_loc_delta.drop(['CommitHash', 'TimeStamp'], axis=1)[~df_loc_delta.Language.isin(['Total'] + resource_types)].groupby(by=['Author', 'Language']).sum()\n",
+    "hv.Bars(df, ['Author', 'Language'], ['Code', 'Comments', 'Blanks'])\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Resources"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%output size=175\n",
+    "%%opts Bars [tools=['hover'] xrotation=90 legend_position='top' width=750]\n",
+    "df = df_loc_delta.drop(['CommitHash', 'TimeStamp'], axis=1)[df_loc_delta.Language.isin(resource_types)].groupby(by=['Author', 'Language']).sum()\n",
+    "hv.Bars(df, ['Author', 'Language'], ['Code', 'Comments', 'Blanks'])\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Commits by Author to Repository in Project\n",
+    "\n",
+    "**Note:** These counts exclude \"merge to master\" commits."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%output size=200\n",
+    "%%opts HeatMap [tools=['hover'] xrotation=90]\n",
+    "ds_auth_tot = hv.Dataset(df_auth_tot, ['Repo', 'Author'], ['Commits'])\n",
+    "ds_auth_tot.to(hv.HeatMap, ['Repo', 'Author'], 'Commits')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "commits = pd.pivot_table(df_auth_tot, values=['Commits'], index=['Author'], \n",
+    "                         columns=['Repo'], fill_value=0, aggfunc=np.sum)\n",
+    "commits['Total'] = commits.sum(axis=1)\n",
+    "commits = commits.sort_values(by='Total', ascending=False).append(commits.sum().rename('Total'))\n",
+    "commits"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Lines of Code Growth Over Time\n",
+    "### Source Code"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts NdOverlay [legend_position='top_left' finalize_hooks=[apply_formatter_y_non_scientific]]\n",
+    "%%opts Curve [tools=['hover'] xrotation=90 width=700 height=400]\n",
+    "df = df_loc.copy()\n",
+    "df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s')\n",
+    "df['Day'] = df['Date'].dt.date\n",
+    "df = df[df.Language != 'Total']\n",
+    "df['Type'] = df.apply(lambda row: 'Resource' if row['Language'] in resource_types else 'Source', axis=1)\n",
+    "df = df.drop(['CommitHash', 'TimeStamp', 'Language', 'Date'], axis=1)\n",
+    "df = df[df.Type == 'Source']\n",
+    "df = df.groupby(by=['Repo', 'Day']).max()\n",
+    "ds = hv.Dataset(df, kdims=['Day', 'Repo'], vdims=[('Code', 'Lines of Code')])\n",
+    "grouped = ds.to(hv.Curve)\n",
+    "grouped.overlay()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Resources"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts NdOverlay [legend_position='top_left' finalize_hooks=[apply_formatter_y_non_scientific] logy=True]\n",
+    "%%opts Curve [tools=['hover'] xrotation=90 width=700 height=400]\n",
+    "df = df_loc.copy()\n",
+    "df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s')\n",
+    "df['Day'] = df['Date'].dt.date\n",
+    "df = df[df.Language != 'Total']\n",
+    "df['Type'] = df.apply(lambda row: 'Resource' if row['Language'] in resource_types else 'Source', axis=1)\n",
+    "df = df.drop(['CommitHash', 'TimeStamp', 'Language', 'Date'], axis=1)\n",
+    "df = df[df.Type == 'Resource']\n",
+    "df = df.groupby(by=['Repo', 'Day']).max()\n",
+    "ds = hv.Dataset(df, kdims=['Day', 'Repo'], vdims=[('Code', 'Lines (Log Scale)')])\n",
+    "grouped = ds.to(hv.Curve)\n",
+    "grouped.overlay()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Contribution by Time of Day and Day of Week"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts HeatMap [height=450 width=300 tools=['hover']]\n",
+    "df = df_revs.copy()\n",
+    "df['Date'] = pd.to_datetime(df_revs['TimeStamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('US/Mountain')\n",
+    "\n",
+    "# Adjust day and hour offsets for Brian (Eastern Time Zone)\n",
+    "df['Day'] = np.where(df['Author'] == 'Brian Jones', (df['Date'] + pd.DateOffset(hours=2)).dt.weekday, df['Date'].dt.weekday)\n",
+    "df['Hour'] = np.where(df['Author'] == 'Brian Jones', (df['Date'] + pd.DateOffset(hours=2)).dt.hour, df['Date'].dt.hour)\n",
+    "\n",
+    "# Adjust day and hour offsets for Zack (Eastern Time Zone)\n",
+    "df['Day'] = np.where(df['Author'] == 'Zachary Abzug', (df['Date'] + pd.DateOffset(hours=2)).dt.weekday, df['Date'].dt.weekday)\n",
+    "df['Hour'] = np.where(df['Author'] == 'Zachary Abzug', (df['Date'] + pd.DateOffset(hours=2)).dt.hour, df['Date'].dt.hour)\n",
+    "\n",
+    "df = df.drop(['CommitHash', 'TimeStamp', 'TimeZone', 'AuthorEmail', 'Domain', 'Date', 'Repo'], axis=1)\n",
+    "df['Count'] = 0\n",
+    "df = df.groupby(by=['Author', 'Day', 'Hour']).count().reset_index()\n",
+    "\n",
+    "# # Because I can't figure out how to set the extents in the holomap, I'm creating a \"background\" heatmap with\n",
+    "# # 0 counts across the board and then merging that with the results from df_revs_tod\n",
+    "from itertools import product\n",
+    "init = pd.DataFrame(list(product(df['Author'].drop_duplicates(), range(7), range(24), [0])), \n",
+    "                    columns=['Author', 'Day', 'Hour', 'Count'])\n",
+    "df = init.merge(df, how='outer', on=['Author', 'Day', 'Hour'])\n",
+    "df['Count'] = df.Count_x + df.Count_y\n",
+    "hv.Dataset(df, kdims=['Author', 'Day', 'Hour'], vdims=['Count']).to(hv.HeatMap, kdims=['Day', 'Hour'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Contribution by Day on Project"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts HeatMap [height=150 width=300 tools=['hover'] xrotation=90]\n",
+    "df = df_revs.copy()\n",
+    "df['Date'] = pd.to_datetime(df_revs['TimeStamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('US/Mountain')\n",
+    "mindate = df['Date'].min(axis=1)\n",
+    "df['Delta'] = df['Date'] - mindate\n",
+    "df['Week'] = df['Delta'].dt.days // 7\n",
+    "df['DOW'] = df['Date'].dt.dayofweek\n",
+    "\n",
+    "df = df.drop(['CommitHash', 'TimeStamp', 'TimeZone', 'AuthorEmail', 'Domain', 'Date', 'Repo'], axis=1)\n",
+    "df['Count'] = 0\n",
+    "df = df.groupby(by=['Author', 'Week', 'DOW']).count().reset_index()\n",
+    "\n",
+    "# # Because I can't figure out how to set the extents in the holomap, I'm creating a \"background\" heatmap with\n",
+    "# # 0 counts across the board and then merging that with the results from df_revs_tod\n",
+    "from itertools import product\n",
+    "init = pd.DataFrame(list(product(df['Author'].drop_duplicates(), range(df['Week'].max() + 1), range(7), [0])), \n",
+    "                    columns=['Author', 'Week', 'DOW', 'Count'])\n",
+    "df = init.merge(df, how='outer', on=['Author', 'Week', 'DOW'])\n",
+    "df['Count'] = df.Count_x + df.Count_y\n",
+    "hv.Dataset(df, kdims=['Author', 'Week', 'DOW'], vdims=['Count']).to(hv.HeatMap, kdims=['Week', 'DOW'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# PR Merge Frequency"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts HeatMap [height=150 width=300 tools=['hover'] xrotation=90]\n",
+    "\n",
+    "from itertools import product\n",
+    "def gen_dow_heatmap(df):\n",
+    "    # Because I can't figure out how to set the extents in the holomap, I'm creating a \"background\" heatmap with\n",
+    "    # 0 counts across the board and then merging that with the results from df_revs_tod\n",
+    "    init = pd.DataFrame(list(product(range(df['Week'].max() + 1), range(7), [0])), \n",
+    "                        columns=['Week', 'DOW', 'Count'])\n",
+    "    df = init.merge(df, how='outer', on=['Week', 'DOW'])\n",
+    "    df['Count'] = df.Count_x + df.Count_y\n",
+    "    return hv.Dataset(df, kdims=['Week', 'DOW'], vdims=['Count']).to(hv.HeatMap, kdims=['Week', 'DOW'])    \n",
+    "\n",
+    "df = df_revs.copy()\n",
+    "df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('US/Mountain')\n",
+    "df['Delta'] = df['Date'] - mindate\n",
+    "df['Week'] = df['Delta'].dt.days // 7\n",
+    "df['DOW'] = df['Date'].dt.dayofweek\n",
+    "\n",
+    "df = df.drop(['CommitHash', 'TimeStamp', 'TimeZone', 'AuthorEmail', 'Domain', 'Date', 'Repo'], axis=1)\n",
+    "df['Count'] = 0\n",
+    "\n",
+    "gen_dow_heatmap(df[df.MergeToMaster != 0].groupby(by=['Week', 'DOW']).count().reset_index())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Non-merge Commit Frequency"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts HeatMap [height=150 width=300 tools=['hover'] xrotation=90]\n",
+    "gen_dow_heatmap(df[df.MergeToMaster == 0].groupby(by=['Week', 'DOW']).count().reset_index())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Duration Between PR Creation and Merge\n",
+    "\n",
+    "We'll look at the overall distribution of PR Merge duration and also look at the max instance"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "frequencies, edges = np.histogram(df_prs['PrMergeDuration']/3600, 100)\n",
+    "hist = hv.Histogram((edges[2:], frequencies[2:]), kdims=[hv.Dimension('Hours')])\n",
+    "print(f\"{frequencies[0]} PRs merged in under {(edges[0] * 3600):2.3} seconds.\")\n",
+    "print(f\"{frequencies[0] + frequencies[1]} PRs merged in under {edges[1]:2.3} hours.\")\n",
+    "hist"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_prs[df_prs['PrMergeDuration'] == df_prs['PrMergeDuration'].max()]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Commits to Consider for Exclusion"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = pd.merge(df_loc_delta, df_revs, on='CommitHash', how='left', suffixes=('', '_right')).drop(['Repo_right', 'TimeStamp_right'], axis=1)\n",
+    "df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s')\n",
+    "df['Day'] = df['Date'].dt.date\n",
+    "df['Type'] = df.apply(lambda row: 'Resource' if row['Language'] in resource_types else 'Source', axis=1)\n",
+    "df = df.drop(['TimeStamp', 'Date', 'TimeZone', 'MergeToMaster', 'Author_right', 'AuthorEmail', 'Domain'], axis=1)\n",
+    "df_code = df[(df.Type == 'Source') & (df.Language != 'Total')].sort_values('Code')\n",
+    "df_resources = df[(df.Type == 'Resource')].sort_values('Lines')\n",
+    "pd.concat([df_code.head(), df_code.tail(), df_resources.head(), df_resources.tail()]).sort_values('Lines')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%opts Bars [tools=['hover'] xrotation=90 width=700 height=400]\n",
+    "df = pd.merge(df_loc_delta, df_revs, on='CommitHash', how='left', suffixes=('', '_right')).drop(['Repo_right', 'TimeStamp_right'], axis=1)\n",
+    "df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s')\n",
+    "df['Day'] = df['Date'].dt.date\n",
+    "df['Type'] = df.apply(lambda row: 'Resource' if row['Language'] in resource_types else 'Source', axis=1)\n",
+    "df = df[df.Type == 'Source']\n",
+    "df = df.drop(['TimeStamp', 'Date', 'TimeZone', 'MergeToMaster', 'Author_right', 'AuthorEmail', 'Domain', 'Type'], axis=1)\n",
+    "df = df[df.Language != 'Total']\n",
+    "df = df.groupby(by=['Repo', 'Day', 'Author', 'Language']).sum()\n",
+    "ds = hv.Dataset(df, kdims=['Day', 'Repo', 'Author', 'Language'], vdims=[('Code', 'Lines of Code')])\n",
+    "ds.to(hv.Bars)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
