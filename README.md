@@ -1,3 +1,8 @@
+| Build |
+| ----- |
+| [![Build Status](https://img.shields.io/docker/automated/rappdw/team-view-notebook.svg)](https://hub.docker.com/r/rappdw/team-view-notebook/) |
+
+
 # Docker Image for Team View Analysis Notebook
 
 While this docker image can be used standalone (with appropriate mounts when running),
