@@ -1,4 +1,4 @@
-FROM rappdw/docker-ds:cpu-only
+FROM rappdw/docker-ds
 
 RUN pip install tv-extract; \
     mkdir /home/jovyan/project
