@@ -1,6 +1,4 @@
-| Build |
-| ----- |
-| [![Build Status](https://img.shields.io/docker/automated/rappdw/team-view-notebook.svg)](https://hub.docker.com/r/rappdw/team-view-notebook/) |
+[![Build Status](https://img.shields.io/docker/automated/rappdw/team-view-notebook.svg)](https://hub.docker.com/r/rappdw/team-view-notebook/)
 
 
 # Docker Image for Team View Analysis Notebook
