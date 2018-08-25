@@ -15,7 +15,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+      "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "import pandas as pd\n",
@@ -43,7 +47,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "from io import StringIO\n",
@@ -80,7 +88,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%opts Bars [tools=['hover'] xrotation=90 finalize_hooks=[apply_formatter_y_non_scientific]] {+framewise +axiswise}\n",
@@ -104,7 +116,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%output size=200\n",
@@ -129,7 +145,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%output size=200\n",
@@ -140,7 +160,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "commits = pd.pivot_table(df_auth_tot, values=['Commits'], index=['Author'], columns=['Repo'], fill_value=0, aggfunc=np.sum)\n",
@@ -158,7 +182,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%opts NdOverlay [legend_position='right' finalize_hooks=[apply_formatter_y_non_scientific]]\n",
@@ -191,7 +219,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "def create_background_counts(df, x_range, y_range, columns):\n",
@@ -234,7 +266,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%opts HeatMap [tools=['hover'] xrotation=90]\n",
@@ -254,7 +290,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%opts HeatMap [height=150 width=300 tools=['hover'] xrotation=90]\n",
@@ -294,7 +334,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "frequencies, edges = np.histogram(df_prs['PrMergeDuration']/3600, 100)\n",
@@ -307,7 +351,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "df_prs[df_prs['PrMergeDuration'] == df_prs['PrMergeDuration'].max()]"
@@ -323,7 +371,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "df = pd.merge(df_loc_delta, df_revs, on='CommitHash', how='left', suffixes=('', '_right')).drop(['Repo_right', 'TimeStamp_right'], axis=1)\n",
@@ -339,7 +391,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": [
     "%%opts Bars [tools=['hover'] xrotation=90 width=700 height=400] {+axiswise}\n",
@@ -359,7 +415,11 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "metadata": {},
+   "metadata": {
+    "jupyter": {
+     "source_hidden": true
+    }
+   },
    "outputs": [],
    "source": []
   }
