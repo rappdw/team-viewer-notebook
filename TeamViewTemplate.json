@@ -37,7 +37,7 @@
     "df_repo = pd.read_csv(f'{project_stats_dir}/repo.csv')\n",
     "df_prs = pd.read_csv(f'{project_stats_dir}/prs.csv')\n",
     "\n",
-    "resource_types = ['Plain Text', 'Notebook', 'Markdown', 'HTML', 'JSON', 'SVG', 'YAML']\n",
+    "resource_types = ['Plain Text', 'Notebook', 'Markdown', 'CSS', 'HTML', 'JSON', 'SVG', 'YAML', 'ReStructuredText', 'TOML']\n",
     "\n",
     "from bokeh.models import BasicTickFormatter\n",
     "def apply_formatter_y_non_scientific(plot, element):\n",
