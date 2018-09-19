@@ -199,7 +199,7 @@
    "source": [
     "## Volume of Source and Resource\n",
     "\n",
-    "Let's look at just the volume of source files in the repositories for this project. Volume will be examined on a per repository / per language basis and is measure in terms of line count and file count. We will split the analysis into Source (C, Python, etc.) and Resource (Markdown, Plain Text, etc.) The reason for seperating Source and Resource is due to significant differences that we commonly see in range extents. Doing so provides a better understanding of the relative volumes."
+    "Let's look at just the volume of source files in the repositories for this project. Volume will be examined on a per repository / per language basis and is measured in terms of line count and file count. We will split the analysis into Source (C, Python, etc.) and Resource (Markdown, Plain Text, etc.) The reason for seperating Source and Resource is due to significant differences that we commonly see in range extents. Doing so provides a better understanding of the relative volumes."
    ]
   },
   {
