@@ -1,0 +1,31 @@
+{
+  "awsregion": "us-west-2",
+  "extracts": [
+    {
+      "name": "sample",
+      "repos": [
+        {"name": "nvidia-python", "remote": "git@192.30.255.112:rappdw/nvidia-python.git"},
+        {"name": "docker-utils", "remote": "git@192.30.255.112:resero-labs/docker-utils.git"},
+        {"name": "misc-utils", "remote": "git@192.30.255.112:rappdw/misc-utils.git"},
+        {"name": "docker-ds", "remote": "git@192.30.255.112:rappdw/docker-ds.git"}
+      ],
+      "start_date": "2017-09-27",
+      "end_date": "2018-04-01",
+      "adjustments": [
+        "docker-utils,57bad28d5bb46460d2c3081b2245d14a8ce019a9,1513373926,Dan Rapp,Autoconf,-1,-2,-2,0,0,Exclude initial pull of utils from other projects",
+        "docker-utils,57bad28d5bb46460d2c3081b2245d14a8ce019a9,1513373926,Dan Rapp,BASH,-1,-20,-14,-2,-4,Exclude initial pull of utils from other projects",
+        "docker-utils,57bad28d5bb46460d2c3081b2245d14a8ce019a9,1513373926,Dan Rapp,Markdown,0,-12,-12,0,0,Exclude initial pull of utils from other projects",
+        "docker-utils,57bad28d5bb46460d2c3081b2245d14a8ce019a9,1513373926,Dan Rapp,Python,-10,-2697,-2064,-187,-446,Exclude initial pull of utils from other projects",
+        "docker-utils,57bad28d5bb46460d2c3081b2245d14a8ce019a9,1513373926,Dan Rapp,Total,-13,-2731,-2092,-189,-450,Exclude initial pull of utils from other projects"
+      ],
+      "tod_adjustments": [
+        {
+          "dev": "Brian Jones",
+          "offset": 2
+        }
+      ]
+    }
+  ],
+  "output_path": "/root/.local/share/cache/TeamView",
+  "mailmap_file": "/root/extract/.mailmap"
+}
