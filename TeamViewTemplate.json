@@ -100,7 +100,7 @@
     "    '''Add useful datetime columns based on timestamp of row'''\n",
     "    df['Day'] = pd.to_datetime(df['TimeStamp'], unit='s').dt.date\n",
     "    df['Date'] = pd.to_datetime(df['TimeStamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert('US/Mountain')\n",
-    "    mindate = df['Date'].min(axis=1)\n",
+    "    mindate = df['Date'].min()\n",
     "    df['Delta'] = df['Date'] - mindate\n",
     "    df['WeekOfProject'] = df['Delta'].dt.days // 7\n",
     "    df['DayOfWeek'] = df['Date'].dt.dayofweek\n",
