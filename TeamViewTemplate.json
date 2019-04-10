@@ -163,6 +163,7 @@
     "df_revs = adjust_for_timezone(augment_datetime(pd.read_csv(f'{project_stats_dir}/revs.csv')))\n",
     "df_repo = augment_source(pd.read_csv(f'{project_stats_dir}/repo.csv'))\n",
     "df_prs = pd.read_csv(f'{project_stats_dir}/prs.csv')\n",
+    "ignore_set = set(pd.read_csv(f'{project_stats_dir}/ignore.csv').Author)\n",
     "\n",
     "df_loc_delta = augment_source(pd.concat([\n",
     "    df_loc_delta,\n",
@@ -247,8 +248,8 @@
     "%%opts Bars [legend_position='top' width=800 tools=['hover'] xrotation=90 finalize_hooks=[apply_formatter_y_non_scientific]] {+framewise +axiswise}\n",
     "\n",
     "df_src, df_resrc = split_source_resource(df_loc_delta)\n",
-    "df_src = df_src.groupby(by=['Author', 'Language']).sum()\n",
-    "df_resrc = df_resrc.groupby(by=['Author', 'Language']).sum()\n",
+    "df_src = df_src[~df_src.Author.isin(ignore_set)].groupby(by=['Author', 'Language']).sum()\n",
+    "df_resrc = df_resrc[~df_resrc.Author.isin(ignore_set)].groupby(by=['Author', 'Language']).sum()\n",
     "\n",
     "kdims = ['Author', 'Language']\n",
     "vdims = ['Code', 'Comments', 'Blanks']\n",
@@ -281,7 +282,7 @@
    "outputs": [],
    "source": [
     "%%output size=200\n",
-    "hv.HeatMap(df_auth_tot, kdims=['Repo', 'Author'], vdims='Commits')"
+    "hv.HeatMap(df_auth_tot[~df_auth_tot.Author.isin(ignore_set)], kdims=['Repo', 'Author'], vdims='Commits')\n"
    ]
   },
   {
@@ -301,7 +302,7 @@
    },
    "outputs": [],
    "source": [
-    "commits = pd.pivot_table(df_auth_tot, values=['Commits'], index=['Author'], columns=['Repo'], fill_value=0, aggfunc=np.sum)\n",
+    "commits = pd.pivot_table(df_auth_tot[~df_auth_tot.Author.isin(ignore_set)], values=['Commits'], index=['Author'], columns=['Repo'], fill_value=0, aggfunc=np.sum)\n",
     "commits['Total'] = commits.sum(axis=1)\n",
     "commits.sort_values(by='Total', ascending=False).append(commits.sum().rename('Total'))"
    ]
@@ -362,7 +363,7 @@
    },
    "outputs": [],
    "source": [
-    "df = df_revs.copy()\n",
+    "df = df_revs[~df_revs.Author.isin(ignore_set)].copy()\n",
     "df['Count'] = 0\n",
     "\n",
     "tod_kdims = ['Author', 'DayOfWeek', 'HourOfDay']\n",
@@ -399,7 +400,7 @@
    "source": [
     "%%opts HeatMap [height=150 width=300]\n",
     "\n",
-    "df = df_revs.copy()\n",
+    "df = df_revs[~df_revs.Author.isin(ignore_set)].copy()\n",
     "df['Count'] = 0\n",
     "\n",
     "kdims = ['WeekOfProject', 'DayOfWeek']\n",
